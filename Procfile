@@ -1,0 +1,1 @@
+web: target/universal/stage/bin/scala-examination -Dhttp.port=${PORT} -Dplay.evolutions.db.default.autoApply=true -Dslick.dbs.default.db.url=${JDBC_DATABASE_URL} -Dslick.dbs.default.db.user=${JDBC_DATABASE_USERNAME} -Dslick.dbs.default.db.password=${JDBC_DATABASE_PASSWORD}

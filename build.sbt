@@ -1,4 +1,4 @@
-name := """librarian-system"""
+name := """scala-examination"""
 
 version := "1.0-SNAPSHOT"
 
