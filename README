@@ -28,8 +28,6 @@ Components
 
   Shows how to use Guice to bind all the components needed by your application.
 
-- Counter.scala:
-
   An example of a component that contains state, in this case a simple counter.
 
 - ApplicationTimer.scala:

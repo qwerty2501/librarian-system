@@ -1,0 +1,40 @@
+# --- !Ups
+
+create function SET_CREATE_TIME() returns opaque as $$
+  begin
+    new."CREATED_AT" := now();;
+    new."UPDATED_AT" := now();;
+    return new;;
+  end;;
+$$ language 'plpgsql';
+
+
+
+create function SET_UPDATE_TIME() returns opaque as $$
+  begin
+    new."UPDATED_AT" := now();;
+    return new;;
+  end;;
+$$ language 'plpgsql';
+
+CREATE TABLE "USERS"(
+    "ID" SERIAL NOT NULL PRIMARY KEY,
+    "MAIL" VARCHAR NOT NULL UNIQUE,
+    "PASSWORD" VARCHAR NOT NULL UNIQUE,
+    "NAME" VARCHAR NOT NULL UNIQUE,
+    "CREATED_AT" TIMESTAMP NOT NULL,
+    "UPDATED_AT" TIMESTAMP NOT NULL,
+    "DELETED_AT" TIMESTAMP
+);
+
+CREATE TRIGGER UPDATE_TRIGGER BEFORE UPDATE ON "USERS" FOR EACH ROW
+EXECUTE PROCEDURE SET_UPDATE_TIME();
+
+CREATE TRIGGER CREATE_TRIGGER BEFORE INSERT ON "USERS" FOR EACH ROW
+EXECUTE PROCEDURE SET_CREATE_TIME();
+
+# --- !Downs
+
+DROP TABLE IF EXISTS  "USERS";
+DROP FUNCTION IF EXISTS SET_CREATE_TIME();
+DROP FUNCTION IF EXISTS SET_UPDATE_TIME();
