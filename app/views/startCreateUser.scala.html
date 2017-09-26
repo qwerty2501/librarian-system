@@ -1,0 +1,19 @@
+@import helper._
+@import forms.StartCreateUserRequestForm
+@(requestForm: Form[StartCreateUserRequestForm])(implicit messages: MessagesProvider)
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ユーザ登録</title>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
+</head>
+<body>
+    @form(action = routes.UserController.startCreateResult()) {
+        @formTable("ユーザ登録") {
+            @inputText(field = requestForm("mail"))(tableRowInput,implicitly[Messages])
+        }
+        <input type="submit">
+    }
+    </body>
+</html>
