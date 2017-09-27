@@ -2,7 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /user/create/:requestKey    controllers.UserController.create(requestKey)
-GET     /user/create/request        controllers.UserController.startCreate
-POST     /user/create/request        controllers.UserController.startCreateResult
+GET     /users/create/:requestKey    controllers.UserController.create(requestKey)
+GET     /users/create/request        controllers.UserController.createRequest
+POST     /users/create/request        controllers.UserController.createRequestResult
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

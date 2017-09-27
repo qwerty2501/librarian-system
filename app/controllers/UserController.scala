@@ -8,7 +8,7 @@ import play.api._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import services.UserService
+import services.{MailService, UserService}
 import utilities.{AkkaDispatcherProvider, ApplicationError}
 import play.api.i18n.Messages.Implicits._
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 
 @Singleton
-class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailerClient: MailerClient,messagesAction: MessagesActionBuilder) extends InjectedController{
+class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailService: MailService,messagesAction: MessagesActionBuilder) extends InjectedController{
 
   private val startCreateUserRequestForm = Form(
     mapping(
@@ -30,11 +30,11 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     Ok(views.html.startCreateUser(startCreateUserRequestForm))
   }
 
-  def startCreate = messagesAction {implicit request: MessagesRequest[AnyContent]=>
+  def createRequest = messagesAction {implicit request: MessagesRequest[AnyContent]=>
     Ok(views.html.startCreateUser(startCreateUserRequestForm))
   }
 
-  def startCreateResult = messagesAction.async { implicit request =>
+  def createRequestResult = messagesAction.async { implicit request =>
 
     val bindedFormRequest = startCreateUserRequestForm.bindFromRequest
 
@@ -43,32 +43,24 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
         Future.apply(BadRequest(views.html.startCreateUser(formWithErrors)))
       },
       createUserRequest =>{
-        service.userRegistrationRequest(createUserRequest)
-          .filter{either => either.isRight}
-          .map {either=>
-              sendMail(createUserRequest.mail,either.right.get,request)
-            }(akkaDispatcherProvider.nonBlockingDispatcher) //メールの送信は非ブロックDispatcherで良い
-          .map{
-            case Left(error) => BadRequest(views.html.startCreateUser(bindedFormRequest.withGlobalError(error.message,null)))
-            case Right(_) => Ok(views.html.startCreateUserResult("ユーザ作成リクエスト","招待メールを送信しました"))
-          }(akkaDispatcherProvider.nonBlockingDispatcher)
+         service.userRegistrationRequest(createUserRequest.mail)
+           .map{
+             case Right(requestKey) => {
+               sendUserRegistrationNoticeMail(createUserRequest.mail,requestKey,request)
+               Ok(views.html.startCreateUserResult("ユーザ作成リクエスト","招待メールを送信しました"))
+             }
+             case Left(error)  => BadRequest(views.html.startCreateUser(bindedFormRequest.withGlobalError(error.message,null)))
+           }(akkaDispatcherProvider.nonBlockingDispatcher)
       }
     )
   }
-  def sendMail(mailTo:String, requestKey:UUID,request:Request[_]): Either[ApplicationError,_] ={
-    //メール送信自体はModelの機能だが、ユーザからするとメールはViewの機能であり、コントローラにメール送信処理を記述する
-    val url = routes.UserController.create(requestKey.toString()).absoluteURL()(request)
-    val mail = Email(subject = "ユーザ登録確認メール",
-      from = "scala from <scalaexamination@gmail.com>",
-      to = Seq(s"mail to <${mailTo}>"),
-      bodyHtml = Some(views.html.userRegistrationMail(url).body))
-    try{
-      mailerClient.send(mail)
-      Right(Nil)
-    } catch {
-      case e:Exception => Left(new ApplicationError("メール送信に失敗しました",e))
-    }
+  private def sendUserRegistrationNoticeMail(mailTo:String, requestKey:String,request:Request[_]): Unit ={
+    //メール送信自体はModelの機能だが、ユーザからするとメールはViewの機能であり、メール文の生成はコントローラで行う
+    val url = routes.UserController.create(requestKey).absoluteURL()(request)
+    val body = views.html.userRegistrationMail(url).body
 
+    //メール送信完了まで待機してしまうと、レスポンスが非常に遅くなってしまうため、待機しない
+    mailService.sendMail(mailTo,"ユーザ登録通知", body)
   }
 
 

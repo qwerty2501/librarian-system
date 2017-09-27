@@ -5,12 +5,15 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.inject._
 
+import com.google.inject.ImplementedBy
+
 import scala.concurrent.{ExecutionContext, Future}
 import models.User
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
+@ImplementedBy(classOf[UserDAOImpl])
 trait UserDAO {
   def find(mail:String): Future[Seq[User]]
 
