@@ -26,8 +26,13 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     )(StartCreateUserRequestForm.apply)(StartCreateUserRequestForm.unapply)
   )
 
-  def create(requestKey:String) = messagesAction {implicit request: MessagesRequest[AnyContent]=>
-    Ok(views.html.startCreateUser(startCreateUserRequestForm))
+  def create(requestKey:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
+    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
+    service.checkBeforeCreateUser(requestKey).map{
+      case Right(_) => Ok(views.html.startCreateUser(startCreateUserRequestForm))
+      case Left(error)=> BadRequest("BadRequest")
+    }
+
   }
 
   def createRequest = messagesAction {implicit request: MessagesRequest[AnyContent]=>
@@ -37,21 +42,18 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   def createRequestResult = messagesAction.async { implicit request =>
 
     val bindedFormRequest = startCreateUserRequestForm.bindFromRequest
-
+    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
     bindedFormRequest.fold(
-      formWithErrors =>{
-        Future.apply(BadRequest(views.html.startCreateUser(formWithErrors)))
-      },
-      createUserRequest =>{
-         service.userRegistrationRequest(createUserRequest.mail)
-           .map{
-             case Right(requestKey) => {
-               sendUserRegistrationNoticeMail(createUserRequest.mail,requestKey,request)
-               Ok(views.html.startCreateUserResult("ユーザ作成リクエスト","招待メールを送信しました"))
-             }
-             case Left(error)  => BadRequest(views.html.startCreateUser(bindedFormRequest.withGlobalError(error.message,null)))
-           }(akkaDispatcherProvider.nonBlockingDispatcher)
-      }
+      formWithErrors =>Future.apply(BadRequest(views.html.startCreateUser(formWithErrors))),
+
+      createUserRequest =>service.userRegistrationRequest(createUserRequest.mail)
+        .map{
+          case Right(requestKey) => {
+            sendUserRegistrationNoticeMail(createUserRequest.mail,requestKey,request)
+            Ok(views.html.startCreateUserResult("ユーザ作成リクエスト","招待メールを送信しました"))
+          }
+          case Left(error)  => BadRequest(views.html.startCreateUser(bindedFormRequest.withGlobalError(error.message,null)))
+        }
     )
   }
   private def sendUserRegistrationNoticeMail(mailTo:String, requestKey:String,request:Request[_]): Unit ={

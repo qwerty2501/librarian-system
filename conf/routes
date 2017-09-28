@@ -3,6 +3,6 @@
 # ~~~~
 
 GET     /users/create/:requestKey    controllers.UserController.create(requestKey)
-GET     /users/create/request        controllers.UserController.createRequest
-POST     /users/create/request        controllers.UserController.createRequestResult
+GET     /users/start/create/request        controllers.UserController.createRequest
+POST     /users/start/create/request        controllers.UserController.createRequestResult
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
