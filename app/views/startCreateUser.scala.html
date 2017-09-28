@@ -9,8 +9,8 @@
     <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
 </head>
 <body>
-    @form(action = routes.UserController.createRequestResult()) {
-        @formTable("ユーザ登録") {
+    @form(action = routes.UserController.postCreateStartRequest()) {
+        @formTable("ユーザ登録申込") {
             @inputText(field = requestForm("mail"))(tableRowInput,implicitly[Messages])
         }
         <input type="submit">

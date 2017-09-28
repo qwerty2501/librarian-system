@@ -1,10 +1,21 @@
+@import helper._
+@import forms.CreateUserForm
+@(createUserForm: Form[CreateUserForm])(implicit messages: MessagesProvider)
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>ユーザ登録</title>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
 </head>
 <body>
-
+@form(action = routes.UserController.postCreate()) {
+@formTable("ユーザ登録") {
+@inputText(field = createUserForm("name"))(tableRowInput,implicitly[Messages])
+@inputPassword(field = createUserForm("password"))(tableRowInput,implicitly[Messages])
+@inputPassword(field = createUserForm("passwordConfirm"))(tableRowInput,implicitly[Messages])
+}
+<input type="submit">
+}
 </body>
 </html>

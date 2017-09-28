@@ -3,6 +3,7 @@ package controllers
 import java.util.UUID
 import javax.inject._
 
+import akka.actor.Status.Success
 import forms._
 import play.api._
 import play.api.data.Form
@@ -26,20 +27,42 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     )(StartCreateUserRequestForm.apply)(StartCreateUserRequestForm.unapply)
   )
 
-  def create(requestKey:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
+  private val createUserForm = Form(
+    mapping(
+      "name" -> nonEmptyText(3,32),
+      "password" -> nonEmptyText(8,16),
+      "passwordConfirm"-> nonEmptyText(8,16)
+    )(CreateUserForm.apply)(CreateUserForm.unapply)
+      .verifying("パスワードが一致しません", field => field.password == field.passwordConfirm)
+  )
+
+  def postCreate() = messagesAction.async{implicit request =>
+    val createToken = request.session.get("create_token").getOrElse("")
     implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
-    service.checkBeforeCreateUser(requestKey).map{
-      case Right(_) => Ok(views.html.startCreateUser(startCreateUserRequestForm))
-      case Left(error)=> BadRequest("BadRequest")
+    val bindedFormRequest = createUserForm.bindFromRequest
+    bindedFormRequest.fold(
+      formWithErrors => Future.apply(BadRequest(views.html.createUser(formWithErrors))),
+      createUser =>service.createUserFromCreateToken(createToken,createUser).map{
+        case Right(_)=>  Ok(views.html.createUserResult())
+        case Left(error)=>BadRequest(views.html.createUser(bindedFormRequest.withGlobalError(error.message)))
+      }
+    )
+
+  }
+  def getCreate(token:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
+    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
+    service.progressCreateUserFromToken(token).map{
+      case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("create_token",createToken))
+      case Left(error)=> BadRequest(error.message)
     }
 
   }
 
-  def createRequest = messagesAction {implicit request: MessagesRequest[AnyContent]=>
+  def getCreateStartRequest = messagesAction {implicit request: MessagesRequest[AnyContent]=>
     Ok(views.html.startCreateUser(startCreateUserRequestForm))
   }
 
-  def createRequestResult = messagesAction.async { implicit request =>
+  def postCreateStartRequest = messagesAction.async { implicit request =>
 
     val bindedFormRequest = startCreateUserRequestForm.bindFromRequest
     implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
@@ -58,7 +81,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   }
   private def sendUserRegistrationNoticeMail(mailTo:String, requestKey:String,request:Request[_]): Unit ={
     //メール送信自体はModelの機能だが、ユーザからするとメールはViewの機能であり、メール文の生成はコントローラで行う
-    val url = routes.UserController.create(requestKey).absoluteURL()(request)
+    val url = routes.UserController.getCreate(requestKey).absoluteURL()(request)
     val body = views.html.userRegistrationMail(url).body
 
     //メール送信完了まで待機してしまうと、レスポンスが非常に遅くなってしまうため、待機しない
