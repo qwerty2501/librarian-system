@@ -56,21 +56,17 @@ class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationS
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
       }
 
-      Right(CreateUserToken(JWTHelpers.toJWT(UserRegistrationRequest(userRegistrationRequest.mail,LocalDateTime.now.plusHours(3)),applicationSetting.userRegistrationRequestKey)))
+      Right(CreateUserToken(userRegistrationRequest.mail))
     }
   }
 
   def createUserFromCreateToken(createToken:CreateUserToken,userCreateForm:CreateUserForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]={
-    val userRegistrationRequest = JWTHelpers.fromJWT[UserRegistrationRequest](createToken.token,applicationSetting.userRegistrationRequestKey).getOrElse(UserRegistrationRequest("",null))
-    if(userRegistrationRequest.mail =="" || userRegistrationRequest.expiresAt == null || LocalDateTime.now.isAfter(userRegistrationRequest.expiresAt)){
-      return Future.apply(Left(ApplicationError("登録に必要な認証情報が無効です")))
-    }
-    userDAO.find(userRegistrationRequest.mail).map { users =>
+    userDAO.find(createToken.mail).map { users =>
       if (users.length > 0) {
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
       }
       val passwordHash = HMACHelper.generateHMAC(applicationSetting.userPasswordHashKey,userCreateForm.password)
-      val insertFuture = userDAO.insert(User(0,userRegistrationRequest.mail,passwordHash,userCreateForm.name,null,null))
+      val insertFuture = userDAO.insert(User(0,createToken.mail,passwordHash,userCreateForm.name,null,null))
       Await.result(insertFuture,Duration.Inf)
       Right(Nil)
     }.recover{

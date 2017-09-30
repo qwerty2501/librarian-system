@@ -38,7 +38,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   )
 
   def postCreate() = messagesAction.async{implicit request =>
-    val createToken = request.session.get("create_user_token").getOrElse("")
+    val createToken = request.session.get("for_create_mail").getOrElse("")
     val bindedFormRequest = createUserForm.bindFromRequest
     bindedFormRequest.fold(
       formWithErrors => Future.apply(BadRequest(views.html.createUser(formWithErrors))),
@@ -51,7 +51,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   }
   def getCreate(token:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
     service.progressCreateUserFromMailToken(CreateUserRequestMailToken(token)).map{
-      case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("create_user_token",createToken.token))
+      case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("for_create_mail","test_token"))
       case Left(error)=> BadRequest(error.message)
     }
 

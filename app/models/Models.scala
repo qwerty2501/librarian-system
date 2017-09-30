@@ -7,7 +7,7 @@ case class User(id:Int, mail:String, password:String, name:String, createdAt:Tim
 
 case class CreateUserRequestMailToken(token:String)
 
-case class CreateUserToken(token:String)
+case class CreateUserToken(mail:String)
 
 
 
