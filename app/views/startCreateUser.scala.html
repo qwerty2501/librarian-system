@@ -1,6 +1,6 @@
 @import helper._
 @import forms.StartCreateUserRequestForm
-@(requestForm: Form[StartCreateUserRequestForm])(implicit messages: MessagesProvider)
+@(startCreateUserRequestForm: Form[StartCreateUserRequestForm])(implicit messages: MessagesProvider)
 
 <!DOCTYPE html>
 <html>
@@ -9,9 +9,10 @@
     <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
 </head>
 <body>
+    @formHeader(startCreateUserRequestForm)
     @form(action = routes.UserController.postCreateStartRequest()) {
         @formTable("ユーザ登録申込") {
-            @inputText(field = requestForm("mail"))(tableRowInput,implicitly[Messages])
+            @inputText(field = startCreateUserRequestForm("mail"))(tableRowInput,implicitly[Messages])
         }
         <input type="submit">
     }

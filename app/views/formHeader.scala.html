@@ -1,0 +1,9 @@
+
+@(form:Form[_])(implicit messages: MessagesProvider)
+@if(form.hasGlobalErrors) {
+<p class="error">
+    @for(error <- form.globalErrors) {
+    <p>@error.format(messages.messages)</p>
+    }
+</p>
+}

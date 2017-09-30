@@ -1,0 +1,19 @@
+@import helper._
+@import forms.LoginForm
+@(loginForm: Form[LoginForm])(implicit messages: MessagesProvider)
+
+<html>
+<head>
+    <title>ログイン</title>
+</head>
+<body>
+
+@formHeader(loginForm)
+@form(action = routes.UserController.postCreate()) {
+    @formTable("ログイン") {
+    @inputText(field = loginForm("mail"))(tableRowInput,implicitly[Messages])
+    @inputPassword(field = loginForm("password"))(tableRowInput,implicitly[Messages])
+    }
+}
+</body>
+</html>
