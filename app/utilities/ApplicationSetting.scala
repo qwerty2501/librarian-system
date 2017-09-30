@@ -12,7 +12,7 @@ trait ApplicationSetting {
 }
 
 class ApplicationSettingImpl @Inject()(applicationProvider:Provider[Application]) extends ApplicationSetting{
-  private val config = applicationProvider.get().config()
+  private def config = applicationProvider.get().config()
   def userRegistrationRequestKey = config.getString("userRegistrationRequestKey")
   def userPasswordHashKey = config.getString("userPasswordHashKey")
 }

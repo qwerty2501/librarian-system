@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+
+GET /                                         controllers.HomeController.getIndex()
 GET     /users/create/:createUserMailToken    controllers.UserController.getCreate(createUserMailToken)
 POST    /users/create                   controllers.UserController.postCreate
 GET     /users/create/start/request        controllers.UserController.getCreateStartRequest
