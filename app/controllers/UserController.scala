@@ -51,7 +51,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   }
   def getCreate(token:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
     service.progressCreateUserFromMailToken(CreateUserRequestMailToken(token)).map{
-      case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("for_create_mail","test_token"))
+      case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("for_create_mail",createToken.mail))
       case Left(error)=> BadRequest(error.message)
     }
 

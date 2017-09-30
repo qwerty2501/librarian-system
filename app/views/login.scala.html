@@ -9,11 +9,12 @@
 <body>
 
 @formHeader(loginForm)
-@form(action = routes.UserController.postCreate()) {
+@form(action = routes.AuthenticationController.postLogin()) {
     @formTable("ログイン") {
-    @inputText(field = loginForm("mail"))(tableRowInput,implicitly[Messages])
-    @inputPassword(field = loginForm("password"))(tableRowInput,implicitly[Messages])
+    @inputText(field = loginForm("loginMail"))(tableRowInput,implicitly[Messages])
+    @inputPassword(field = loginForm("loginPassword"))(tableRowInput,implicitly[Messages])
     }
+    <input value="ログイン" type="submit">
 }
 </body>
 </html>

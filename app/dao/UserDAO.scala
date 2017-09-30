@@ -16,7 +16,7 @@ import slick.jdbc.JdbcProfile
 @ImplementedBy(classOf[UserDAOImpl])
 trait UserDAO {
   def find(mail:String): Future[Seq[User]]
-
+  def find(mail:String,passwordHash:String):Future[Seq[User]]
   def insert(user: User): Future[Unit]
 }
 
@@ -24,7 +24,7 @@ class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
   import profile.api._
 
   private val users = TableQuery[UsersTable]
-
+  def find(mail:String,passwordHash:String):Future[Seq[User]] = db.run(users.filter( u => (u.mail === mail) && (u.password === passwordHash)).result)
   def find(mail:String): Future[Seq[User]] = db.run(users.filter(u=>u.mail === mail).result)
 
   def insert(user: User): Future[Unit] = db.run(users += user).map { _ => () }

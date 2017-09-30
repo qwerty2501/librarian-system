@@ -7,19 +7,33 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.Forms.mapping
 import play.api.mvc.MessagesActionBuilder
+import services.AuthenticationService
 import utilities.AkkaDispatcherProvider
+
+import scala.concurrent.Future
 
 
 @Singleton
-class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherProvider,messagesAction: MessagesActionBuilder) extends BaseController(akkaDispatcherProvider) {
+class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherProvider,messagesAction: MessagesActionBuilder,authenticationService:AuthenticationService) extends BaseController(akkaDispatcherProvider) {
   private val loginForm = Form(
     mapping(
-      "mail"-> email,
-      "password" -> Validations.passwordValication
+      "loginMail"-> email,
+      "loginPassword" -> Validations.passwordValication
     )(LoginForm.apply)(LoginForm.unapply)
   )
 
   def getLogin= messagesAction{implicit request =>
     Ok(views.html.login(loginForm))
+  }
+
+  def postLogin = messagesAction.async{implicit  request =>
+    val bindedLoginForm = loginForm.bindFromRequest()
+    bindedLoginForm.fold(
+      formWithErrors=> Future.apply(BadRequest(views.html.login(formWithErrors))),
+      succeedLoginForm => authenticationService.authenticate(succeedLoginForm.mail,succeedLoginForm.password).map{
+        case Left(error)=> BadRequest(views.html.login(bindedLoginForm.withGlobalError(error.message)))
+        case Right(_) => Redirect(routes.HomeController.getIndex())
+      }
+    )
   }
 }
