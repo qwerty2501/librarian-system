@@ -61,6 +61,9 @@ class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationS
   }
 
   def createUserFromCreateToken(createToken:CreateUserToken,userCreateForm:CreateUserForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]={
+    if (createToken.mail.length == 0){
+      Left(ApplicationError("無効なトークンです"))
+    }
     userDAO.find(createToken.mail).map { users =>
       if (users.length > 0) {
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
