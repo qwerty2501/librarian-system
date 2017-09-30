@@ -36,7 +36,7 @@ class UserServiceSpec extends PlaySpec {
 
       val mailTokenEither = Await.result(mailTokenFuture,Duration.Inf)
 
-      //mailTokenEither.isRight must be true
+      mailTokenEither.isRight must be(true)
 
       mailTokenEither.right.get.token.length must not be 0
     }
