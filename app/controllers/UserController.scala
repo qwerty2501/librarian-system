@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 
 @Singleton
-class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailService: MailService,messagesAction: MessagesActionBuilder) extends InjectedController{
+class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailService: MailService,messagesAction: MessagesActionBuilder) extends BaseController(akkaDispatcherProvider){
 
   private val startCreateUserRequestForm = Form(
     mapping(
@@ -39,7 +39,6 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
 
   def postCreate() = messagesAction.async{implicit request =>
     val createToken = request.session.get("create_user_token").getOrElse("")
-    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
     val bindedFormRequest = createUserForm.bindFromRequest
     bindedFormRequest.fold(
       formWithErrors => Future.apply(BadRequest(views.html.createUser(formWithErrors))),
@@ -51,7 +50,6 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
 
   }
   def getCreate(token:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
-    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
     service.progressCreateUserFromMailToken(CreateUserRequestMailToken(token)).map{
       case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("create_user_token",createToken.token))
       case Left(error)=> BadRequest(error.message)
@@ -66,9 +64,6 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
   def postCreateStartRequest = messagesAction.async { implicit request =>
 
     val bindedFormRequest = startCreateUserRequestForm.bindFromRequest
-    implicit val nonBlockingDispatcher = akkaDispatcherProvider.nonBlockingDispatcher
-
-
     bindedFormRequest.fold(
       formWithErrors =>Future.apply(BadRequest(views.html.startCreateUser(formWithErrors))),
 
