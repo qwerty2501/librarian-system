@@ -22,7 +22,7 @@ class UserServiceSpec extends PlaySpec {
     "mail token succeed" in {
       val userService = new UserServiceImpl(new {} with UserDAO{
         override def find(mail: String): Future[Seq[User]] = Future.apply(List[User]())
-
+        override def find(mail: String, passwordHash: String): Future[Seq[User]] = ???
         override def insert(user: User): Future[Unit] = ???
 
 

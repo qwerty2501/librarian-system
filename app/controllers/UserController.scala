@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 
 @Singleton
-class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailService: MailService,messagesAction: MessagesActionBuilder) extends BaseController(akkaDispatcherProvider){
+class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDispatcherProvider,mailService: MailService,ma: MessagesActionBuilder) extends BaseController(akkaDispatcherProvider,ma){
 
   private val startCreateUserRequestForm = Form(
     mapping(

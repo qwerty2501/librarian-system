@@ -14,7 +14,7 @@ import scala.concurrent.Future
 
 
 @Singleton
-class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherProvider,messagesAction: MessagesActionBuilder,authenticationService:AuthenticationService) extends BaseController(akkaDispatcherProvider) {
+class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherProvider,ma: MessagesActionBuilder,authenticationService:AuthenticationService) extends BaseController(akkaDispatcherProvider,ma) {
   private val loginForm = Form(
     mapping(
       "loginMail"-> email,
@@ -32,7 +32,7 @@ class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherP
       formWithErrors=> Future.apply(BadRequest(views.html.login(formWithErrors))),
       succeedLoginForm => authenticationService.authenticate(succeedLoginForm.mail,succeedLoginForm.password).map{
         case Left(error)=> BadRequest(views.html.login(bindedLoginForm.withGlobalError(error.message)))
-        case Right(_) => Redirect(routes.HomeController.getIndex())
+        case Right(user) => Redirect(routes.HomeController.getIndex()).withSession(("userID" ,user.id.toString))
       }
     )
   }
