@@ -13,7 +13,7 @@ import forms.{CreateUserForm, StartCreateUserRequestForm}
 import models._
 import models.UserRegistrationRequest
 import play.api.libs.mailer.{Email, MailerClient}
-import utilities.{AkkaDispatcherProvider, ApplicationError, HMACHelper, JWTHelpers}
+import utilities._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import ExecutionContext.Implicits.global
@@ -25,22 +25,21 @@ import play.api.libs.json.Json
 
 @ImplementedBy(classOf[UserServiceImpl])
 trait UserService {
-  def userRegistrationRequest(mail:String)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]
+  def userRegistrationRequest(form:StartCreateUserRequestForm)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]
   def progressCreateUserFromMailToken(mailToken:CreateUserRequestMailToken)(implicit executor: ExecutionContext): Future[Either[ApplicationError,CreateUserToken]]
   def createUserFromCreateToken(createToken:CreateUserToken, userCreateForm:CreateUserForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]
 }
 
-class UserServiceImpl @Inject()(val userDAO:UserDAO,application :Provider[Application]) extends UserService{
-  private def userRegistrationRequestKey = application.get.config().getString("userRegistrationRequestKey")
-  private def userPasswordHashKey = application.get().config().getString("userPasswordHashKey")
-  def userRegistrationRequest(mail :String)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]={
+class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationSetting) extends UserService{
+
+  def userRegistrationRequest(form :StartCreateUserRequestForm)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]={
+    val mail = form.mail
     userDAO.find(mail).map{users =>
       if (users.length > 0) {
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
       }
       else{
-        val key = application.get.config().getString("userRegistrationRequestKey")
-        Right(CreateUserRequestMailToken(JWTHelpers.toJWT(UserRegistrationRequest(mail,LocalDateTime.now.plusDays(1)),key)))
+        Right(CreateUserRequestMailToken(JWTHelpers.toJWT(UserRegistrationRequest(mail,LocalDateTime.now.plusDays(1)),applicationSetting.userRegistrationRequestKey)))
       }
     }.recover{
       case e: Exception => Left(ApplicationError("データ処理に失敗しました",e))
@@ -48,7 +47,7 @@ class UserServiceImpl @Inject()(val userDAO:UserDAO,application :Provider[Applic
   }
 
   def progressCreateUserFromMailToken(token:CreateUserRequestMailToken)(implicit executor: ExecutionContext): Future[Either[ApplicationError,CreateUserToken]] ={
-    val userRegistrationRequest = JWTHelpers.fromJWT[UserRegistrationRequest](token.token,userRegistrationRequestKey).getOrElse(UserRegistrationRequest("",null))
+    val userRegistrationRequest = JWTHelpers.fromJWT[UserRegistrationRequest](token.token,applicationSetting.userRegistrationRequestKey).getOrElse(UserRegistrationRequest("",null))
     if(userRegistrationRequest.mail =="" || userRegistrationRequest.expiresAt == null || LocalDateTime.now.isAfter(userRegistrationRequest.expiresAt)){
         return Future.apply(Left(ApplicationError("登録確認メールの有効期限が切れているか、無効なトークンです")))
     }
@@ -57,12 +56,12 @@ class UserServiceImpl @Inject()(val userDAO:UserDAO,application :Provider[Applic
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
       }
 
-      Right(CreateUserToken(JWTHelpers.toJWT(UserRegistrationRequest(userRegistrationRequest.mail,LocalDateTime.now.plusHours(3)),userRegistrationRequestKey)))
+      Right(CreateUserToken(JWTHelpers.toJWT(UserRegistrationRequest(userRegistrationRequest.mail,LocalDateTime.now.plusHours(3)),applicationSetting.userRegistrationRequestKey)))
     }
   }
 
   def createUserFromCreateToken(createToken:CreateUserToken,userCreateForm:CreateUserForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]={
-    val userRegistrationRequest = JWTHelpers.fromJWT[UserRegistrationRequest](createToken.token,userRegistrationRequestKey).getOrElse(UserRegistrationRequest("",null))
+    val userRegistrationRequest = JWTHelpers.fromJWT[UserRegistrationRequest](createToken.token,applicationSetting.userRegistrationRequestKey).getOrElse(UserRegistrationRequest("",null))
     if(userRegistrationRequest.mail =="" || userRegistrationRequest.expiresAt == null || LocalDateTime.now.isAfter(userRegistrationRequest.expiresAt)){
       return Future.apply(Left(ApplicationError("登録に必要な認証情報が無効です")))
     }
@@ -70,7 +69,7 @@ class UserServiceImpl @Inject()(val userDAO:UserDAO,application :Provider[Applic
       if (users.length > 0) {
         Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
       }
-      val passwordHash = HMACHelper.generateHMAC(userPasswordHashKey,userCreateForm.password)
+      val passwordHash = HMACHelper.generateHMAC(applicationSetting.userPasswordHashKey,userCreateForm.password)
       val insertFuture = userDAO.insert(User(0,userRegistrationRequest.mail,passwordHash,userCreateForm.name,null,null))
       Await.result(insertFuture,Duration.Inf)
       Right(Nil)

@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   openId,
   "com.typesafe.play" %% "play-json" % "2.6.0",
   "com.pauldijou" %% "jwt-play-json" % "0.14.0",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
   "com.typesafe.play" %% "play-slick" % "3.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "3.0.0",

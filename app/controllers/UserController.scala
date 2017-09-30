@@ -67,7 +67,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     bindedFormRequest.fold(
       formWithErrors =>Future.apply(BadRequest(views.html.startCreateUser(formWithErrors))),
 
-      createUserRequest =>service.userRegistrationRequest(createUserRequest.mail)
+      createUserRequest =>service.userRegistrationRequest(createUserRequest)
         .map{
           case Right(createUserMailToken) => {
             sendUserRegistrationNoticeMail(createUserRequest.mail,createUserMailToken,request)
