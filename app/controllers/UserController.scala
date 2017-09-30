@@ -30,9 +30,9 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
 
   private val createUserForm = Form(
     mapping(
-      "name" -> nonEmptyText(3,32),
-      "password" -> nonEmptyText(8,16),
-      "passwordConfirm"-> nonEmptyText(8,16)
+      "name" -> Validations.nameValidation,
+      "password" -> Validations.passwordValication,
+      "passwordConfirm"-> Validations.passwordValication
     )(CreateUserForm.apply)(CreateUserForm.unapply)
       .verifying("パスワードが一致しません", field => field.password == field.passwordConfirm)
   )
