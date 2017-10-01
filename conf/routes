@@ -4,10 +4,19 @@
 
 
 GET /                                         controllers.HomeController.getIndex
+
+#users
 GET     /users/create/:createUserMailToken    controllers.UserController.getCreate(createUserMailToken)
 POST    /users/create                   controllers.UserController.postCreate
 GET     /users/create/start/request        controllers.UserController.getCreateStartRequest
 POST     /users/create/start/request        controllers.UserController.postCreateStartRequest
+
+#authentication
 GET /login                           controllers.AuthenticationController.getLogin
 POST /login                          controllers.AuthenticationController.postLogin
+
+#statuses
+GET /statuses                         controllers.StatusController.getStatuses
+
+#assets
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

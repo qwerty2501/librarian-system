@@ -1,5 +1,6 @@
 package controllers
 
+import akka.dispatch.MessageDispatcher
 import play.api.mvc._
 
 import scala.concurrent.Future

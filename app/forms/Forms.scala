@@ -6,3 +6,5 @@ case class StartCreateUserRequestForm(mail:String)
 case class CreateUserForm(name:String,password:String,passwordConfirm:String)
 
 case class LoginForm(mail:String,password:String)
+
+case class NewStatusForm(text:String)

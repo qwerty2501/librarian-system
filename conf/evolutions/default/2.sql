@@ -1,3 +1,4 @@
 # --- !Downs
 
+DROP TABLE "STATUSES";
 DROP TABLE  "USERS";

@@ -25,13 +25,20 @@ import play.api.libs.json.Json
 
 @ImplementedBy(classOf[UserServiceImpl])
 trait UserService {
+  def existUser(id:Int)(implicit executor: ExecutionContext):Future[Either[ApplicationError,Boolean]]
   def userRegistrationRequest(form:StartCreateUserRequestForm)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]
   def progressCreateUserFromMailToken(mailToken:CreateUserRequestMailToken)(implicit executor: ExecutionContext): Future[Either[ApplicationError,CreateUserToken]]
   def createUserFromCreateToken(createToken:CreateUserToken, userCreateForm:CreateUserForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]
 }
 
 class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationSetting) extends UserService{
-
+  def existUser(id:Int)(implicit executor: ExecutionContext):Future[Either[ApplicationError,Boolean]] ={
+    userDAO.find(id).map{users=>
+      Right(!users.isEmpty)
+    }.recover{
+      case e:Exception => Left(ApplicationError("データ処理に失敗しました",e))
+    }
+  }
   def userRegistrationRequest(form :StartCreateUserRequestForm)(implicit executor: ExecutionContext):Future[Either[ApplicationError,CreateUserRequestMailToken]]={
     val mail = form.mail
     userDAO.find(mail).map{users =>
@@ -81,8 +88,7 @@ class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationS
   }
 
   def t(e:Exception): Unit ={
-    val t = e.getMessage
-    t.startsWith(t)
+
   }
 
 }

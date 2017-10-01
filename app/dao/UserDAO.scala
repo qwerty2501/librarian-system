@@ -15,6 +15,8 @@ import slick.jdbc.JdbcProfile
 
 @ImplementedBy(classOf[UserDAOImpl])
 trait UserDAO {
+  def findIn(ids:Seq[Int]):Future[Seq[User]]
+  def find(id:Int):Future[Seq[User]]
   def find(mail:String): Future[Seq[User]]
   def find(mail:String,passwordHash:String):Future[Seq[User]]
   def insert(user: User): Future[Int]
@@ -22,14 +24,16 @@ trait UserDAO {
 
 class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends BaseDAO with UserDAO{
   import profile.api._
-
   private val users = TableQuery[UsersTable]
+
+  override def findIn(ids: Seq[Int]): Future[Seq[User]] = db.run(users.filter(u=> u.id inSetBind ids).result)
+  override def find(id: Int): Future[Seq[User]] = db.run(users.filter(u=>u.id === id).result)
   override def find(mail:String,passwordHash:String):Future[Seq[User]] = db.run(users.filter( u => (u.mail === mail) && (u.password === passwordHash)).result)
   override def find(mail:String): Future[Seq[User]] = db.run(users.filter(u=>u.mail === mail).result)
 
   override def insert(user: User): Future[Int] = db.run(users += user)
 
-  private class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
+  class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
 
 
     def id = column[Int]("ID", O.PrimaryKey,O.AutoInc)
@@ -42,3 +46,5 @@ class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
     def * = (id,mail,password,name,createdAt,updatedAt) <> ((User.apply _).tupled , User.unapply _)
   }
 }
+
+

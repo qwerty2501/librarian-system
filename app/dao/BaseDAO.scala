@@ -11,7 +11,7 @@ import slick.jdbc.JdbcProfile
 abstract class BaseDAO extends HasDatabaseConfigProvider[JdbcProfile]  {
   import profile.api._
   implicit val localDateToDate = MappedColumnType.base[LocalDateTime, Timestamp](
-    l => Timestamp.valueOf(l),
-    d => d.toLocalDateTime
+    l => if (l != null) Timestamp.valueOf(l) else null,
+    d => if (d != null) d.toLocalDateTime else null
   )
 }

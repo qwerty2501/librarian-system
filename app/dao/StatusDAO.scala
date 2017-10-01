@@ -12,19 +12,22 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[StatusDAOImpl])
 trait StatusDAO {
+  def getAll():Future[Seq[Status]]
   def insert(status:Status):Future[Int]
 }
 
 class StatusDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends BaseDAO with StatusDAO{
   import profile.api._
   private val statuses = TableQuery[StatusTable]
+
+  override def getAll(): Future[Seq[Status]] = db.run(statuses.sortBy(_.createdAt.desc).result)
   override def insert(status: Status): Future[Int] = db.run(statuses += status)
 
-  private class StatusTable(tag: Tag) extends Table[Status](tag, "STATUSES") {
+  class StatusTable(tag: Tag) extends Table[Status](tag, "STATUSES") {
 
 
     def id = column[Int]("ID", O.PrimaryKey,O.AutoInc)
-    def userID = column[Int]("ID")
+    def userID = column[Int]("USER_ID")
     def text = column[String]("TEXT")
     def createdAt = column[LocalDateTime]("CREATED_AT")
     def updatedAt = column[LocalDateTime]("UPDATED_AT")

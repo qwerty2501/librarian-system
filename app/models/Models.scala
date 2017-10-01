@@ -11,5 +11,5 @@ case class CreateUserToken(mail:String)
 
 case class Status(id:Int,userID:Int,text:String,createdAt:LocalDateTime,updatedAt:LocalDateTime)
 
-
+case class StatusWithUser(statusID:Int, userID:Int, userName:String,text:String)
 

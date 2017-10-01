@@ -12,9 +12,9 @@
 @formHeader(createUserForm)
 @form(action = routes.UserController.postCreate()) {
 @formTable("ユーザ登録") {
-@inputText(field = createUserForm("name"))(tableRowInput,implicitly[Messages])
-@inputPassword(field = createUserForm("password"))(tableRowInput,implicitly[Messages])
-@inputPassword(field = createUserForm("passwordConfirm"))(tableRowInput,implicitly[Messages])
+    @inputText(field = createUserForm("name"))(tableRowInput,implicitly[Messages])
+    @inputPassword(field = createUserForm("password"))(tableRowInput,implicitly[Messages])
+    @inputPassword(field = createUserForm("passwordConfirm"))(tableRowInput,implicitly[Messages])
 }
 <input value="登録" type="submit">
 }
