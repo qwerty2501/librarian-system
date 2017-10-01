@@ -18,7 +18,7 @@ class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherP
   private val loginForm = Form(
     mapping(
       "loginMail"-> email,
-      "loginPassword" -> Validations.passwordValication
+      "loginPassword" -> nonEmptyText //エラーでパスワード桁数がわかってしまうためあえてnonEmptyTextのみにする
     )(LoginForm.apply)(LoginForm.unapply)
   )
 
