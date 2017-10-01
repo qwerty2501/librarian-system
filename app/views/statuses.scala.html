@@ -3,19 +3,29 @@
 @(statuses:Seq[StatusWithUser],newStatusForm:Form[NewStatusForm],errorMessage:String = null)(implicit messages: MessagesProvider)
 
 @main("statuses"){
+
 @if(errorMessage != null){
     <p class="error">@(errorMessage)</p>
 }
+
+
+@formHeader(newStatusForm)
+@form(action = routes.StatusController.postStatus()) {
+@formTable("新しいつぶやき") {
+@inputText(field = newStatusForm("text"))(tableRowInput,implicitly[Messages])
+}
+<input value="つぶやく" type="submit">
+}
+
+
 <table  border=1>
+
     @for(status <- statuses) {
         <tr><td>@status.userName</td><td>@status.text</td></tr>
     }
 
-    @formHeader(newStatusForm)
-    @formTable("新しいつぶやき") {
-        @inputText(field = newStatusForm("text"))(tableRowInput,implicitly[Messages])
-        <input value="つぶやく" type="submit">
-    }
+
 
 </table>
+
 }

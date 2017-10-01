@@ -71,24 +71,14 @@ class UserServiceImpl @Inject()(userDAO:UserDAO,applicationSetting :ApplicationS
     if (createToken.mail.length == 0){
       Left(ApplicationError("無効なトークンです"))
     }
-    userDAO.find(createToken.mail).map { users =>
+    userDAO.find(createToken.mail).flatMap{ users =>
       if (users.length > 0) {
-        Left(ApplicationError("このメールアドレスで既にユーザが登録されています"))
+        Future.apply(Left(ApplicationError("このメールアドレスで既にユーザが登録されています")))
       }
       val passwordHash = HMACHelper.generateHMAC(applicationSetting.userPasswordHashKey,userCreateForm.password)
-      val insertFuture = userDAO.insert(User(0,createToken.mail,passwordHash,userCreateForm.name,null,null))
-      Await.result(insertFuture,Duration.Inf)
-      Right(Nil)
+      userDAO.insert(User(0,createToken.mail,passwordHash,userCreateForm.name,null,null)).map(_=>Right(Nil))
     }.recover{
-      case e:Exception=>{
-        t(e)
-        Left(ApplicationError("ユーザ登録に失敗しました",e))
-      }
+      case e:Exception=> Left(ApplicationError("ユーザ登録に失敗しました",e))
     }
   }
-
-  def t(e:Exception): Unit ={
-
-  }
-
 }

@@ -17,6 +17,7 @@ POST /login                          controllers.AuthenticationController.postLo
 
 #statuses
 GET /statuses                         controllers.StatusController.getStatuses
+POST /statuses                        controllers.StatusController.postStatus
 
 #assets
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
