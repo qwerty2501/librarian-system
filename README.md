@@ -19,7 +19,7 @@ $ cd scala-examination/
 ```
 下記を参考に、PostgreSQLのユーザとデータベースを作成  
 https://www.postgresql.jp/document/9.6/html/app-createuser.html  
-https://www.postgresql.jp/document/9.3/html/app-createdb.html
+https://www.postgresql.jp/document/9.3/html/app-createdb.html  
 conf/application.confを開き、下記設定を変更します
 ```
 slick.dbs.default.db.url="jdbc:postgresql://{ホスト名}/{作成したデータベース名}"
