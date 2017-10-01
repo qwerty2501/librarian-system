@@ -17,17 +17,17 @@ import slick.jdbc.JdbcProfile
 trait UserDAO {
   def find(mail:String): Future[Seq[User]]
   def find(mail:String,passwordHash:String):Future[Seq[User]]
-  def insert(user: User): Future[Unit]
+  def insert(user: User): Future[Int]
 }
 
-class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) extends HasDatabaseConfigProvider[JdbcProfile] with UserDAO{
+class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends BaseDAO with UserDAO{
   import profile.api._
 
   private val users = TableQuery[UsersTable]
-  def find(mail:String,passwordHash:String):Future[Seq[User]] = db.run(users.filter( u => (u.mail === mail) && (u.password === passwordHash)).result)
-  def find(mail:String): Future[Seq[User]] = db.run(users.filter(u=>u.mail === mail).result)
+  override def find(mail:String,passwordHash:String):Future[Seq[User]] = db.run(users.filter( u => (u.mail === mail) && (u.password === passwordHash)).result)
+  override def find(mail:String): Future[Seq[User]] = db.run(users.filter(u=>u.mail === mail).result)
 
-  def insert(user: User): Future[Unit] = db.run(users += user).map { _ => () }
+  override def insert(user: User): Future[Int] = db.run(users += user)
 
   private class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
 
@@ -36,8 +36,8 @@ class UserDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
     def mail = column[String]("MAIL")
     def password = column[String]("PASSWORD")
     def name = column[String]("NAME")
-    def createdAt = column[Timestamp]("CREATED_AT")
-    def updatedAt = column[Timestamp]("UPDATED_AT")
+    def createdAt = column[LocalDateTime]("CREATED_AT")
+    def updatedAt = column[LocalDateTime]("UPDATED_AT")
 
     def * = (id,mail,password,name,createdAt,updatedAt) <> ((User.apply _).tupled , User.unapply _)
   }
