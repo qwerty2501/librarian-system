@@ -1,47 +1,36 @@
-This is your new Play application
+ものすごく最小限なミニブログ
 =================================
 
-This file will be packaged with your application when using `activator dist`.
+このアプリケーションは試験的に作られたものすごく機能が乏しいミニブログWebアプリケーションです。
 
-There are several demonstration files available in this template.
-
-Controllers
+Requirements
 ===========
 
-- HomeController.scala:
+- scala 及び sbt
 
-  Shows how to handle simple HTTP requests.
+- PostgreSQL
 
-- AsyncController.scala:
-
-  Shows how to do asynchronous programming when handling a request.
-
-- CountController.scala:
-
-  Shows how to inject a component into a controller and use the component when
-  handling requests.
-
-Components
-==========
-
-- Module.scala:
-
-  Shows how to use Guice to bind all the components needed by your application.
-
-  An example of a component that contains state, in this case a simple counter.
-
-- ApplicationTimer.scala:
-
-  An example of a component that starts when the application starts and stops
-  when the application stops.
-
-Filters
+How to Setup 
 =======
 
-- Filters.scala:
+```
+$ git clone git@github.com:qwerty2501/scala-examination.git
+$ cd scala-examination/
+```
+下記を参考に、PostgreSQLのユーザとデータベースを作成  
+https://www.postgresql.jp/document/9.6/html/app-createuser.html  
+https://www.postgresql.jp/document/9.3/html/app-createdb.html
+conf/application.confを開き、下記設定を変更します
+```
+slick.dbs.default.db.url="jdbc:postgresql://{ホスト名}/{作成したデータベース名}"
+slick.dbs.default.db.user={作成したデータベースユーザ名}
+slick.dbs.default.db.password="{作成したデータベースユーザパスワード}"
+```
 
-  Creates the list of HTTP filters used by your application.
-
-- ExampleFilter.scala
-
-  A simple filter that adds a header to every response.
+How to Run
+====
+scala-examination/にて、下記コマンドを実行
+```
+$ cd {git cloneしたディレクトリ}scala-examination/
+$ sbt run
+```
