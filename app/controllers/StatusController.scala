@@ -21,24 +21,33 @@ class StatusController @Inject()(statusService: StatusService, akkaDispatcherPro
     )(NewStatusForm.apply)(NewStatusForm.unapply)
   )
   def getStatuses = withAuthAsync{userID => implicit request=>
-    getStatusesInternal(userID)(request)(newStatusForm)
+    getStatusesInternal(userID)(request)(newStatusForm)(null)
   }
 
-  private def getStatusesInternal ={userID:Int => implicit request:MessagesRequest[AnyContent]=> form:Form[NewStatusForm]=>
+  private def getStatusesInternal ={userID:Int => implicit request:MessagesRequest[AnyContent]=> form:Form[NewStatusForm]=> errorMessage:String =>
     statusService.getAllStatuses(userID).map{
-      case Left(error) => BadRequest(views.html.statuses(List[StatusWithUser](),newStatusForm,error.message))
-      case Right(statuses)=>Ok(views.html.statuses(statuses,form))
+      case Left(error) => BadRequest(views.html.statuses(userID,List[StatusWithUser](),newStatusForm,error.message))
+      case Right(statuses)=>Ok(views.html.statuses(userID, statuses,form,errorMessage)).withSession("userID"->userID.toString())
     }
   }
 
   def postStatus = withAuthAsync {userID => implicit request=>
     val bindedNewStatusForm = newStatusForm.bindFromRequest()
     bindedNewStatusForm.fold(
-      formWithErrors => getStatusesInternal(userID)(request)(formWithErrors),
+      formWithErrors => getStatusesInternal(userID)(request)(formWithErrors)(null),
       succeedNewStatusForm => statusService.createStatus(userID,succeedNewStatusForm).flatMap{
-        case Left(error)=> getStatusesInternal(userID)(request)(bindedNewStatusForm.withGlobalError(error.message))
+        case Left(error)=> getStatusesInternal(userID)(request)(bindedNewStatusForm.withGlobalError(error.message))(null)
         case Right(_)=> Future.apply(Redirect(routes.StatusController.getStatuses()))
       }
     )
   }
+
+  def deleteStatus(argStatusID:String) = withAuthAsync{userID=> implicit request=>
+    val statusID = argStatusID.toInt
+    statusService.deleteStatus(userID,statusID).flatMap{
+      case Left(error)=>getStatusesInternal(userID)(request)(newStatusForm)(error.message)
+      case Right(_) => Future.apply(Redirect(routes.StatusController.getStatuses()))
+    }
+  }
+
 }

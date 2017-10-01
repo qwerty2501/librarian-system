@@ -1,6 +1,6 @@
 @import helper._
 @import forms.NewStatusForm
-@(statuses:Seq[StatusWithUser],newStatusForm:Form[NewStatusForm],errorMessage:String = null)(implicit messages: MessagesProvider)
+@(userID:Int,statuses:Seq[StatusWithUser],newStatusForm:Form[NewStatusForm],errorMessage:String = null)(implicit messages: MessagesProvider)
 
 @main("statuses"){
 
@@ -21,7 +21,19 @@
 <table  border=1>
 
     @for(status <- statuses) {
-        <tr><td>@status.userName</td><td>@status.text</td></tr>
+        <tr><td>@status.userName</td><td>@status.text</td>
+            @if(status.userID == userID){
+                <td>
+                    @form(action = routes.StatusController.deleteStatus(status.statusID.toString())) {
+                        <input value="削除" type="submit">
+                    }
+                </td>
+                <td>
+
+                </td>
+            }
+
+        </tr>
     }
 
 
