@@ -14,6 +14,7 @@ POST     /users/create/start/request        controllers.UserController.postCreat
 #authentication
 GET /login                           controllers.AuthenticationController.getLogin
 POST /login                          controllers.AuthenticationController.postLogin
+GET /logout                          controllers.AuthenticationController.getLogout
 
 #statuses
 GET /statuses                         controllers.StatusController.getStatuses

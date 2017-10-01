@@ -7,7 +7,9 @@
 @if(errorMessage != null){
     <p class="error">@(errorMessage)</p>
 }
-
+<div style="text-align:right;">
+    <a href="@(routes.AuthenticationController.getLogout())">ログアウト</a>
+</div>
 
 @formHeader(newStatusForm)
 @form(action = routes.StatusController.postStatus()) {

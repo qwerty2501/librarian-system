@@ -36,4 +36,8 @@ class AuthenticationController @Inject() (akkaDispatcherProvider:AkkaDispatcherP
       }
     )
   }
+
+  def getLogout = withAuth{userID=> implicit request=>
+    Redirect(routes.HomeController.getIndex()).withSession("userID"-> null)
+  }
 }
