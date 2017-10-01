@@ -19,7 +19,8 @@ POST /login                          controllers.AuthenticationController.postLo
 GET /statuses                         controllers.StatusController.getStatuses
 POST /statuses                        controllers.StatusController.postStatus
 GET /statuses/:statusID/delete            controllers.StatusController.deleteStatus(statusID)
-
+GET /statuses/:statusID/update        controllers.StatusController.startUpdateStatus(statusID)
+POST /statuses/:statusID/update        controllers.StatusController.updateStatus(statusID)
 
 #assets
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

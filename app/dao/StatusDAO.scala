@@ -14,7 +14,9 @@ import scala.concurrent.{ExecutionContext, Future}
 trait StatusDAO {
   def getAll():Future[Seq[Status]]
   def insert(status:Status):Future[Int]
-  def delete(statusID:Int):Future[Int]
+  def delete(statusID:Int,userID:Int):Future[Int]
+  def update(status:Status):Future[Int]
+
 }
 
 class StatusDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends BaseDAO with StatusDAO{
@@ -23,8 +25,10 @@ class StatusDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProv
 
   override def getAll(): Future[Seq[Status]] = db.run(statuses.sortBy(_.createdAt.desc).result)
   override def insert(status: Status): Future[Int] = db.run(statuses += status)
+  override def update(status:Status):Future[Int] = db.run(statuses.filter(s => (s.id === status.id) && (s.userID === status.userID)).map(_.text).update(status.text))
 
-  override def delete(statusID: Int): Future[Int] = db.run(statuses.filter(_.id === statusID).delete)
+
+  override def delete(statusID: Int,userID:Int): Future[Int] = db.run(statuses.filter(s => (s.id === statusID ) &&(s.userID === userID)).delete)
   class StatusTable(tag: Tag) extends Table[Status](tag, "STATUSES") {
 
 

@@ -20,6 +20,13 @@ class StatusController @Inject()(statusService: StatusService, akkaDispatcherPro
       "text" -> Validations.statusTextValidation
     )(NewStatusForm.apply)(NewStatusForm.unapply)
   )
+
+  private val newUpdateStatusForm = Form(
+    mapping(
+      "text" -> Validations.statusTextValidation
+    )(NewStatusForm.apply)(NewStatusForm.unapply)
+  )
+
   def getStatuses = withAuthAsync{userID => implicit request=>
     getStatusesInternal(userID)(request)(newStatusForm)(null)
   }
@@ -48,6 +55,22 @@ class StatusController @Inject()(statusService: StatusService, akkaDispatcherPro
       case Left(error)=>getStatusesInternal(userID)(request)(newStatusForm)(error.message)
       case Right(_) => Future.apply(Redirect(routes.StatusController.getStatuses()))
     }
+  }
+
+  def updateStatus(argStatusID:String) = withAuthAsync{userID=> implicit request=>
+    val statusID = argStatusID.toInt
+     val bindedNewUpdateStatusForm = newUpdateStatusForm.bindFromRequest()
+    bindedNewUpdateStatusForm.fold(
+      formWithErrors => Future.apply(BadRequest(views.html.updateStatus(statusID,formWithErrors))),
+      newUpdateStatus => statusService.updateStatus(userID,statusID,newUpdateStatus).map{
+        case Left(error) => BadRequest(views.html.updateStatus(statusID,bindedNewUpdateStatusForm.withGlobalError(error.message)))
+        case Right(_)=> Redirect(routes.HomeController.getIndex())
+      }
+    )
+  }
+
+  def startUpdateStatus(argStatusID:String) = withAuth{ userID=>implicit request=>
+    Ok(views.html.updateStatus(argStatusID.toInt,newUpdateStatusForm))
   }
 
 }

@@ -1,0 +1,15 @@
+@import helper._
+@import forms.NewStatusForm
+@(statusID:Int, newUpdateStatusForm: Form[NewStatusForm])(implicit messages: MessagesProvider)
+
+@main("つぶやき更新"){
+    @formHeader(newUpdateStatusForm)
+    @form(action = routes.StatusController.updateStatus(statusID.toString())) {
+        @formTable("更新つぶやき") {
+            @inputText(field = newUpdateStatusForm("text"))(tableRowInput,implicitly[Messages])
+        }
+        <input value="更新" type="submit">
+    }
+
+}
+

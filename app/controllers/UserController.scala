@@ -42,7 +42,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     val bindedFormRequest = createUserForm.bindFromRequest
     bindedFormRequest.fold(
       formWithErrors => Future.apply(BadRequest(views.html.createUser(formWithErrors))),
-      createUser =>service.createUserFromCreateToken(CreateUserToken(createToken),createUser)(blockingDispatcher).map{
+      createUser =>service.createUserFromCreateToken(CreateUserToken(createToken),createUser).map{
         case Right(_)=>  Ok(views.html.createUserResult())
         case Left(error)=>BadRequest(views.html.createUser(bindedFormRequest.withGlobalError(error.message)))
       }
@@ -50,7 +50,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
 
   }
   def getCreate(token:String) = messagesAction.async {implicit request: MessagesRequest[AnyContent]=>
-    service.progressCreateUserFromMailToken(CreateUserRequestMailToken(token))(blockingDispatcher).map{
+    service.progressCreateUserFromMailToken(CreateUserRequestMailToken(token)).map{
       case Right(createToken) => Ok(views.html.createUser(createUserForm)).withSession(("for_create_mail",createToken.mail))
       case Left(error)=> BadRequest(error.message)
     }
@@ -67,7 +67,7 @@ class UserController @Inject()(service:UserService,akkaDispatcherProvider:AkkaDi
     bindedFormRequest.fold(
       formWithErrors =>Future.apply(BadRequest(views.html.startCreateUser(formWithErrors))),
 
-      createUserRequest =>service.userRegistrationRequest(createUserRequest)(blockingDispatcher)
+      createUserRequest =>service.userRegistrationRequest(createUserRequest)
         .map{
           case Right(createUserMailToken) => {
             sendUserRegistrationNoticeMail(createUserRequest.mail,createUserMailToken,request)

@@ -16,6 +16,7 @@ trait StatusService {
   def getAllStatuses(userID:Int)(implicit executor:ExecutionContext):Future[Either[ApplicationError, Seq[StatusWithUser]]]
   def createStatus(userID:Int, newStatusForm: NewStatusForm)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]
   def deleteStatus(userID:Int, statusID:Int)(implicit executor:ExecutionContext):Future[Either[ApplicationError,_]]
+  def updateStatus(userID:Int,statusID:Int,newStatusForm:NewStatusForm)(implicit executor: ExecutionContext):Future[Either[ApplicationError,_]]
 }
 
 
@@ -65,7 +66,22 @@ class StatusServiceImpl @Inject() (statusDAO: StatusDAO,userService: UserService
         if(exist == false){
           Future.apply(Left(ApplicationError("ユーザが見つかりませんでした")))
         } else{
-          statusDAO.delete(statusID).map(_ =>Right(Nil))
+          statusDAO.delete(statusID,userID).map(_ =>Right(Nil))
+        }
+      }
+    }.recover{
+      case e:Exception => Left(ApplicationError("データ処理に失敗しました",e))
+    }
+  }
+
+  override def updateStatus(userID: Int, statusID: Int, newStatusForm: NewStatusForm)(implicit executor: ExecutionContext): Future[Either[ApplicationError, _]] = {
+    userService.existUser(userID).flatMap{
+      case Left(error)=>Future.apply(Left(error))
+      case Right(exist)=>{
+        if(exist == false){
+          Future.apply(Left(ApplicationError("ユーザが見つかりませんでした")))
+        } else{
+          statusDAO.update(Status(statusID,userID,newStatusForm.text,null,null)).map(_=>Right(Nil))
         }
       }
     }.recover{

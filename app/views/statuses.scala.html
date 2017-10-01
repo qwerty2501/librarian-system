@@ -29,7 +29,9 @@
                     }
                 </td>
                 <td>
-
+                    @form(action = routes.StatusController.startUpdateStatus(status.statusID.toString())) {
+                        <input value="更新" type="submit">
+                    }
                 </td>
             }
 
